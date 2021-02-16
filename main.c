@@ -3,11 +3,15 @@
 #include <ncurses.h>
 #include <sys/types.h>
 
+WINDOW* createWin(int, int , int , int);
+
 int main ()
 {
-    char phrase1[] = "My name \t%d\t And I'm true process\n"
-    char phrase2[] = "Hey Dude My name\t%d\n";
-
+    char phraseN[] = "My name";
+    char phrase1[] = "And I'm true process";
+    char phrase2[] = "Hey Dude";
+    unsigned len1 = sizeof(phrase1);
+    unsigned len2 = sizeof(phrase2);
 
     initscr();                      // Включает режим работы с библиотекой ncurses
     raw();                          // Символы вводимые с клавиатуры не буферизируются, а сразу вносятся в программу 
@@ -34,11 +38,11 @@ int main ()
  */   
     WINDOW *my_win;
 
-	my_win = newwin(10, 10, 10, 10);
+	my_win = createWin(10,10 + len1,10 ,10);
 	box(my_win, 0 , 0);		/* 0, 0 gives default characters 
 					 * for the vertical and horizontal
 					 * lines			*/
-    mvwprintw(menu_win, y, x, "%s", choices[i]);
+    mvwprintw(my_win, 5, 5, "%s %d %s\n", phraseN, 1, phrase1);
     getch();
 	wrefresh(my_win);		/* Show that box 		*/
     getch();
@@ -56,4 +60,16 @@ int main ()
     //	getch();		
 	endwin();                      // Выключение режима работы с ncurses
     return 0;
+}
+
+WINDOW* createWin(int height, int width, int starty, int startx)
+{
+    WINDOW *win;
+	win = newwin(height, width, starty, startx);
+	box(win, 0 , 0);		/* 0, 0 gives default characters 
+					 * for the vertical and horizontal
+					 * lines			*/
+	wrefresh(win);		/* Show that box 		*/
+
+	return win;
 }
