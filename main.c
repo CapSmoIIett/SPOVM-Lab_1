@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include <sys/types.h>
+#include <time.h>
 
 char phraseN[] = "Hello, i'm procces n.";
 
@@ -40,12 +41,17 @@ int main ()
         }
     }
  */   
+    start_color(); 
+    init_pair(1, COLOR_MAGENTA, COLOR_BLACK);   // Иницилируем комбинацию, черный цвет на розовом фоне
+    attron(COLOR_PAIR(1) | A_STANDOUT | A_UNDERLINE);  // Устанавливает пару цветов
+
     WINDOW *my_win;
 
-	my_win = createWin(7, 13 + sizeof(phraseN), 2, 2);
+	my_win = createWin(8, 14 + sizeof(phraseN), 2, 2);
     
 
-
+    attroff(COLOR_PAIR(1) | A_STANDOUT | A_UNDERLINE);  // Отклюяение цветовой пары
+   
     wborder(my_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');             // Замена стенок квадрата на пробелы
 	getch();
 	wrefresh(my_win);
@@ -63,9 +69,20 @@ int main ()
 WINDOW* createWin(int height, int width, int starty, int startx)
 {
     WINDOW *win;
+
+    long int ttime;
+    ttime = time(NULL);             // Берем текущее время
+    
+    char *t = ctime(&ttime);
+    int i = 0; while (t[i] !='\0') i++;
+    t[i - 1] = '\0';                // Удаляю знак табуляции который создает ctime
+
 	win = newwin(height, width, starty, startx);
 	box(win, 0 , 0);		// Устанавливаем символ поумолчанию для каробки 
+
     mvwprintw(win, starty + 1, startx + 2, "%s %d", phraseN, getpid());     // Пишем фразу в коробке 
+    mvwprintw(win, starty + 2, startx + 2,"Now %s", t);  
+    
     getch();
 	wrefresh(win);		/* Show that box 		*/
     getch();
