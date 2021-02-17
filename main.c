@@ -3,11 +3,15 @@
 #include <ncurses.h>
 #include <sys/types.h>
 
-WINDOW* createWin(int, int , int , int);
+char phraseN[] = "Hello, i'm procces n.";
+
+WINDOW* createWin(int, int , int , int);      // Создание окна
+
+
 
 int main ()
 {
-    char phraseN[] = "My name";
+    
     char phrase1[] = "And I'm true process";
     char phrase2[] = "Hey Dude";
     unsigned len1 = sizeof(phrase1);
@@ -38,18 +42,12 @@ int main ()
  */   
     WINDOW *my_win;
 
-	my_win = createWin(10,10 + len1,10 ,10);
-	box(my_win, 0 , 0);		/* 0, 0 gives default characters 
-					 * for the vertical and horizontal
-					 * lines			*/
-    mvwprintw(my_win, 5, 5, "%s %d %s\n", phraseN, 1, phrase1);
-    getch();
-	wrefresh(my_win);		/* Show that box 		*/
-    getch();
+	my_win = createWin(7, 13 + sizeof(phraseN), 2, 2);
+    
 
 
-    wborder(my_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');
-	 getch();
+    wborder(my_win, ' ', ' ', ' ',' ',' ',' ',' ',' ');             // Замена стенок квадрата на пробелы
+	getch();
 	wrefresh(my_win);
 	delwin(my_win);
     getch();
@@ -66,10 +64,10 @@ WINDOW* createWin(int height, int width, int starty, int startx)
 {
     WINDOW *win;
 	win = newwin(height, width, starty, startx);
-	box(win, 0 , 0);		/* 0, 0 gives default characters 
-					 * for the vertical and horizontal
-					 * lines			*/
+	box(win, 0 , 0);		// Устанавливаем символ поумолчанию для каробки 
+    mvwprintw(win, starty + 1, startx + 2, "%s %d", phraseN, getpid());     // Пишем фразу в коробке 
+    getch();
 	wrefresh(win);		/* Show that box 		*/
-
+    getch();
 	return win;
 }
