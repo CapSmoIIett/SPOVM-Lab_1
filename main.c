@@ -3,11 +3,12 @@
 #include <ncurses.h>
 #include <sys/types.h>
 #include <time.h>
+#include <stdarg.h>
 
 char phraseN[] = "Hello, i'm procces n.";
 
 WINDOW* createWinTime();                     // Создание окна c временем
-WINDOW* createWin(char*, int, int, int,...); // Создание окна с надписью
+WINDOW* createWin(char*, int, int, int, ...); // Создание окна с надписью
 
 char* getTime();
 
@@ -33,12 +34,12 @@ int main ()
     attron(COLOR_PAIR(3));                  // Устанавливает пару цветов
 
     win1 = createWinTime();
-    win2 = createWin("This is:", 20, 2, 1, 100);
+    win2 = createWin("This is:", 20, 2, 1, getpid());
 
-    move(12,0);      // Перемещаем курсор
+    move(12,0);                             // Перемещаем курсор
 
     printw("Do you want create second process? (Y/N) ");
-    attroff(COLOR_PAIR(3));
+    attroff(COLOR_PAIR(3));                 // Отключение цветовой пары
     char yes = getch();
     if (yes == 'Y' || yes == 'y')
     {
@@ -55,8 +56,8 @@ int main ()
                 char yes = getch();
                 if (yes == 'Y' || yes == 'y')
                 {
-                    pid = fork();
-                    switch (pid)
+                    pid_t pid2 = fork();
+                    switch (pid2)
                     {
                         case 0: attron(COLOR_PAIR(4));
                                 printw("\nI'm the third process. My name %d", getpid()); 
@@ -82,7 +83,7 @@ int main ()
    
     wborder(win1, ' ', ' ', ' ',' ',' ',' ',' ',' '); // Замена стенок квадрата на пробелы
 	wborder(win2  , ' ', ' ', ' ',' ',' ',' ',' ',' ');
-    attroff(COLOR_PAIR(1));  // Отключение цветовой пары
+    attroff(COLOR_PAIR(1));        
     getch();		
 	endwin();                      // Выключение режима работы с ncurses
     return 0;
@@ -96,7 +97,7 @@ WINDOW* createWinTime()
 	box(win, 0 , 0);		            // Устанавливаем символ для каробки 
 
     mvwprintw(win, 3, 4, "Hello, i'm procces n. %d", getpid());     // Пишем фразу в коробке 
-    mvwprintw(win, 4, 4,"Now %s", getTime());  
+    mvwprintw(win, 4, 4, "Now %s", getTime());  
     
     getch();
 	wrefresh(win);		                // Выводим прямоугольник    
@@ -109,7 +110,8 @@ WINDOW* createWin( char* str, int starty, int startx, int amount, ...)
     WINDOW* win;
     int height = 3;
     int width  = 14 + sizeof(str)+ amount * 5;
-    int* pointer = &amount; pointer++;
+    va_list vl;
+    va_start (vl, amount);
 
     win = newwin(height, width, starty, startx);
 	box(win, 0 , 0);		                    // Устанавливаем символ поумолчанию для каробки 
@@ -117,8 +119,9 @@ WINDOW* createWin( char* str, int starty, int startx, int amount, ...)
 
     move(starty + 1, startx + 2);
     printw("%s", str);                          // Пишем фразу в коробке 
-    while (amount--) printw(" %d", *(pointer)); // Печать дополнительных символов
+    while (amount--) printw(" %d", va_arg(vl, int)); // Печать дополнительных символов
 
+    va_end(vl);
     getch();
 	wrefresh(win);		// Выводим прямоугольник    
     getch();
