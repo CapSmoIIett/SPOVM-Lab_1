@@ -6,9 +6,10 @@
 
 char phraseN[] = "Hello, i'm procces n.";
 
-WINDOW* createWinTime();                // Создание окна c временем
-WINDOW* createWin(char*, int, int, int,...); // Создание окна
+WINDOW* createWinTime();                     // Создание окна c временем
+WINDOW* createWin(char*, int, int, int,...); // Создание окна с надписью
 
+char* getTime();
 
 int main ()
 {
@@ -16,22 +17,28 @@ int main ()
     WINDOW* win2;
     initscr();                              // Включает режим работы с библиотекой ncurses
     if(has_colors() == FALSE)               // Проверка на поддержку цвета терминалом
-	{	endwin();
+	{	
+        endwin();
 		printf("Your terminal does not support color\n");
 		exit(1);
 	}
     raw();                                  // Символы вводимые с клавиатуры не буферизируются, а сразу вносятся в программу 
 
-    start_color(); 
-    init_pair(1, COLOR_RED, COLOR_BLACK);                  // Иницилируем комбинацию, черный цвет на розовом фоне
-    attron(COLOR_PAIR(1));                                 // Устанавливает пару цветов
+    start_color();                          // Включаем цвета
+    init_pair(1, COLOR_RED, COLOR_BLACK);   // Иницилируем комбинации цветов
+    init_pair(2, COLOR_BLUE, COLOR_BLACK); 
+    init_pair(3, COLOR_GREEN, COLOR_BLACK);
+    init_pair(4, COLOR_YELLOW, COLOR_BLACK);
+
+    attron(COLOR_PAIR(3));                  // Устанавливает пару цветов
 
     win1 = createWinTime();
-    win2 = createWin("Shit this is:", 20, 2, 1, getpid());
+    win2 = createWin("This is:", 20, 2, 1, 100);
 
     move(12,0);      // Перемещаем курсор
 
-    printw("Do u wont make a clone? (Y/N)");
+    printw("Do you want create second process? (Y/N) ");
+    attroff(COLOR_PAIR(3));
     char yes = getch();
     if (yes == 'Y' || yes == 'y')
     {
@@ -40,28 +47,42 @@ int main ()
         {
             case 0:
             {  
-                printw("\nHey, I'm not true process  My name %d", getpid()); 
-                printw("\nDo u wont make a second clone? (Y/N)"); 
+                attron(COLOR_PAIR(2));
+                printw("\nI'm not main process  My name %d", getpid()); 
+                printw("\nDo you want create another process? (Y/N) ");           // Предлогаю создать еще один процесс
+                attroff(COLOR_PAIR(2));
+
                 char yes = getch();
-                pid = fork(); 
-                switch (pid)
+                if (yes == 'Y' || yes == 'y')
                 {
-                    case 0: printw("\nI'm born. I a %d", getpid()); break;
-                    default: printw("\nWhoo. I doit. I'm steel %d", getpid());
+                    pid = fork();
+                    switch (pid)
+                    {
+                        case 0: attron(COLOR_PAIR(4));
+                                printw("\nI'm the third process. My name %d", getpid()); 
+                                attroff(COLOR_PAIR(4));break;
+                                
+                        default: attron(COLOR_PAIR(2)); 
+                                 printw("\nI'm the second process. My name %d", getpid());
+                                 attroff(COLOR_PAIR(2));
+                    }
                 }
+                getch();
                 break;
             }
-            default: printw("\nMy name %d. And I'm true process", getpid()); 
+            default: 
+            {
+                attron(COLOR_PAIR(1));
+                printw("\nI'm main process. My name %d.", getpid());
+                attroff(COLOR_PAIR(1)); 
+            }
         }
-        // После вывода я предлогаю еще раз создать копию
-        
     }
+    getch();
    
     wborder(win1, ' ', ' ', ' ',' ',' ',' ',' ',' '); // Замена стенок квадрата на пробелы
 	wborder(win2  , ' ', ' ', ' ',' ',' ',' ',' ',' ');
-    getch();
-	//wrefresh(win1);
-    attroff(COLOR_PAIR(1) | A_STANDOUT | A_UNDERLINE);  // Отключение цветовой пары
+    attroff(COLOR_PAIR(1));  // Отключение цветовой пары
     getch();		
 	endwin();                      // Выключение режима работы с ncurses
     return 0;
@@ -70,18 +91,12 @@ int main ()
 WINDOW* createWinTime()
 {
     WINDOW *win;
-    long int ttime;
-    ttime = time(NULL);                 // Берем текущее время
-    char* t = ctime(&ttime);
+    
+	win = newwin(8, 36, 2, 2);
+	box(win, 0 , 0);		            // Устанавливаем символ для каробки 
 
-    int i = 0; while (t[i] != '\0') i++;
-    t[i - 1] = '\0';                    // Удаляю знак табуляции который создает ctime (он ломает прямоугольник)
-
-	win = newwin(8, 14 + sizeof(phraseN), 2, 2);
-	box(win, 0 , 0);		            // Устанавливаем символ поумолчанию для каробки 
-
-    mvwprintw(win, 3, 4, "%s %d", phraseN, getpid());     // Пишем фразу в коробке 
-    mvwprintw(win, 4, 4,"Now %s", t);  
+    mvwprintw(win, 3, 4, "Hello, i'm procces n. %d", getpid());     // Пишем фразу в коробке 
+    mvwprintw(win, 4, 4,"Now %s", getTime());  
     
     getch();
 	wrefresh(win);		                // Выводим прямоугольник    
@@ -98,15 +113,26 @@ WINDOW* createWin( char* str, int starty, int startx, int amount, ...)
 
     win = newwin(height, width, starty, startx);
 	box(win, 0 , 0);		                    // Устанавливаем символ поумолчанию для каробки 
-    wrefresh(win);		// Выводим прямоугольник 
+    wrefresh(win);		                        // Выводим прямоугольник 
 
     move(starty + 1, startx + 2);
     printw("%s", str);                          // Пишем фразу в коробке 
-    while (amount--) printw(" %d", *(pointer));   // Печать дополнительных символов
+    while (amount--) printw(" %d", *(pointer)); // Печать дополнительных символов
 
     getch();
 	wrefresh(win);		// Выводим прямоугольник    
     getch();
 
     return win;
+}
+
+char* getTime()
+{
+    long int ttime;
+    ttime = time(NULL);                 // Берем текущее время
+    char* t = ctime(&ttime);
+
+    int i = 0; while (t[i] != '\0') i++;
+    t[i - 1] = '\0';                    // Удаляю знак табуляции который создает ctime (он ломает прямоугольник)
+    return t;
 }
