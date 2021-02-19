@@ -21,9 +21,11 @@ int main ()
 	{	
         endwin();
 		printf("Your terminal does not support color\n");
-		exit(1);
+		return 1;//exit(1);
 	}
-    raw();                                  // Символы вводимые с клавиатуры не буферизируются, а сразу вносятся в программу 
+    //raw();                                  // Символы вводимые с клавиатуры не буферизируются, а сразу вносятся в программу 
+    cbreak();
+    noecho();                               // ОТключаем эхо (вывод введенных символов)
 
     start_color();                          // Включаем цвета
     init_pair(1, COLOR_RED, COLOR_BLACK);   // Иницилируем комбинации цветов
@@ -33,31 +35,36 @@ int main ()
 
     attron(COLOR_PAIR(3));                  // Устанавливает пару цветов
 
-    win1 = createWinTime();
-    win2 = createWin("This is:", 20, 2, 1, getpid());
+    getch();
+    win1 = createWinTime(); getch();
+    win2 = createWin("This is:", 20, 2, 1, getpid()); getch();
 
     move(12,0);                             // Перемещаем курсор
 
+    attron(A_BOLD);
     printw("Do you want create second process? (Y/N) ");
-    attroff(COLOR_PAIR(3));                 // Отключение цветовой пары
+    attroff(COLOR_PAIR(3) | A_BOLD);                 // Отключение цветовой пары
     char yes = getch();
     if (yes == 'Y' || yes == 'y')
     {
-        pid_t pid = fork();                 // Создаем процесс
+        pid_t pid = fork();                 // Создаем процесс (Возвращает pid процесса если main, возвращает 0 если дочерний)
         switch (pid)
-        {
+        {  
             case 0:
             {  
                 attron(COLOR_PAIR(2));
-                printw("\nI'm not main process  My name %d", getpid()); 
+                printw("\nI'm not main process. My name %d", getpid()); 
                 printw("\nDo you want create another process? (Y/N) ");           // Предлогаю создать еще один процесс
                 attroff(COLOR_PAIR(2));
+
+                refresh();
 
                 char yes = getch();
                 if (yes == 'Y' || yes == 'y')
                 {
-                    pid_t pid2 = fork();
-                    switch (pid2)
+                    pid_t pid = fork();                                            
+
+                    switch (pid)        
                     {
                         case 0: attron(COLOR_PAIR(4));
                                 printw("\nI'm the third process. My name %d", getpid()); 
@@ -66,8 +73,11 @@ int main ()
                         default: attron(COLOR_PAIR(2)); 
                                  printw("\nI'm the second process. My name %d", getpid());
                                  attroff(COLOR_PAIR(2));
+                                 
                     }
                 }
+
+                refresh();
                 getch();
                 break;
             }
@@ -79,12 +89,13 @@ int main ()
             }
         }
     }
-    getch();
+
    
+    wait();
+
     wborder(win1, ' ', ' ', ' ',' ',' ',' ',' ',' '); // Замена стенок квадрата на пробелы
 	wborder(win2  , ' ', ' ', ' ',' ',' ',' ',' ',' ');
-    attroff(COLOR_PAIR(1));        
-    getch();		
+ 
 	endwin();                      // Выключение режима работы с ncurses
     return 0;
 }
@@ -94,14 +105,15 @@ WINDOW* createWinTime()
     WINDOW *win;
     
 	win = newwin(8, 36, 2, 2);
-	box(win, 0 , 0);		            // Устанавливаем символ для каробки 
+	box(win, 0 , 0);		            // Устанавливаем символs для коробки 
+    wborder(win, '|', '|', '-', '-', '*', '*', '+', '+');
 
     mvwprintw(win, 3, 4, "Hello, i'm procces n. %d", getpid());     // Пишем фразу в коробке 
     mvwprintw(win, 4, 4, "Now %s", getTime());  
     
-    getch();
+    //getch();    //без него не выводится
 	wrefresh(win);		                // Выводим прямоугольник    
-    getch();
+
 	return win;
 }
 
@@ -114,7 +126,7 @@ WINDOW* createWin( char* str, int starty, int startx, int amount, ...)
     va_start (vl, amount);
 
     win = newwin(height, width, starty, startx);
-	box(win, 0 , 0);		                    // Устанавливаем символ поумолчанию для каробки 
+	box(win, 0 , 0);		                    // Устанавливаем символ поумолчанию для коробки 
     wrefresh(win);		                        // Выводим прямоугольник 
 
     move(starty + 1, startx + 2);
@@ -122,9 +134,7 @@ WINDOW* createWin( char* str, int starty, int startx, int amount, ...)
     while (amount--) printw(" %d", va_arg(vl, int)); // Печать дополнительных символов
 
     va_end(vl);
-    getch();
 	wrefresh(win);		// Выводим прямоугольник    
-    getch();
 
     return win;
 }
