@@ -39,11 +39,18 @@ int main ()
     win1 = createWinTime(); getch();
     win2 = createWin("This is:", 20, 2, 1, getpid()); getch();
 
+
+    
+
     move(12,0);                             // Перемещаем курсор
 
     attron(A_BOLD);
     printw("Do you want create second process? (Y/N) ");
     attroff(COLOR_PAIR(3) | A_BOLD);                 // Отключение цветовой пары
+
+    pid_t mainpid = getpid();
+   
+
     char yes = getch();
     if (yes == 'Y' || yes == 'y')
     {
@@ -86,12 +93,33 @@ int main ()
                 attron(COLOR_PAIR(1));
                 printw("\nI'm main process. My name %d.", getpid());
                 attroff(COLOR_PAIR(1)); 
+                refresh();
             }
         }
     }
-
-   
+    
     wait();
+
+    //if(getpid() == mainpid)
+    {
+        yes = 0;
+        pid_t p = fork();                                   // Создаем процесс для обновления времени 
+        if (p == 0) 
+        {
+            while (!((yes >=65 && yes <= 90) || (yes >=97 && yes <= 122)))                        // ПОка не введут букву мы будем обновлять время
+            {
+                halfdelay(10);		// Ждет ввода в течении некоторого времени, после продолжает работу        
+                mvwprintw(win1, 4, 4, "Now %s", getTime());     // Вывод нового времени
+                wrefresh(win1);     // Обновление прямоугольника (вывод на экран)
+                yes = getch();
+                
+            }		
+        }
+        wait();
+    }
+
+    
+    //x waitpid();
 
     wborder(win1, ' ', ' ', ' ',' ',' ',' ',' ',' '); // Замена стенок квадрата на пробелы
 	wborder(win2  , ' ', ' ', ' ',' ',' ',' ',' ',' ');
@@ -109,8 +137,8 @@ WINDOW* createWinTime()
     wborder(win, '|', '|', '-', '-', '*', '*', '+', '+');
 
     mvwprintw(win, 3, 4, "Hello, i'm procces n. %d", getpid());     // Пишем фразу в коробке 
-    mvwprintw(win, 4, 4, "Now %s", getTime());  
-    
+    mvwprintw(win, 4, 4, "Now %s", getTime());                     // Просто выводим время
+
     //getch();    //без него не выводится
 	wrefresh(win);		                // Выводим прямоугольник    
 
