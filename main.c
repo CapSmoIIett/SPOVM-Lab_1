@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <stdarg.h>
+#include <unistd.h> 
 
 char phraseN[] = "Hello, i'm procces n.";
 
